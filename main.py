@@ -28,7 +28,7 @@ except ImportError:
 # ----------------- CENTRAL CONFIGURATION -----------------
 # সব সেটিংস main.py-এর ভিতরেই রাখা হয়েছে — আলাদা config.json লাগবে না।
 CONFIG = {
-    "bot_token": '8474938545:AAG99txUTh07Rf3x92xNOBtAeNAsEtex5I8',
+    "bot_token": '8905165976:AAE03o7XQ95u4bRTaipeCZG64Whex6bJsWo',
     "base_dir": "projects",
     "meta_file": "projects_meta.json",
 
