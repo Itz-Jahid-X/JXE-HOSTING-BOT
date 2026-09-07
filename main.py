@@ -28,7 +28,7 @@ except ImportError:
 # ----------------- CENTRAL CONFIGURATION -----------------
 # সব সেটিংস main.py-এর ভিতরেই রাখা হয়েছে — আলাদা config.json লাগবে না।
 CONFIG = {
-    "bot_token": '8905165976:AAE03o7XQ95u4bRTaipeCZG64Whex6bJsWo',
+    "bot_token": '8474938545:AAG99txUTh07Rf3x92xNOBtAeNAsEtex5I8',
     "base_dir": "projects",
     "meta_file": "projects_meta.json",
 
@@ -1281,9 +1281,16 @@ def show_admin_panel(chat_id, message_id=None):
     else:
         bot_send_message(chat_id, text, parse_mode="Markdown", reply_markup=m)
 
-@bot.message_handler(commands=['admin'])
+@bot.message_handler(commands=['admin'], func=lambda m: is_private_chat(m.chat))
 def admin_command(message):
+    if not is_private_chat(message.chat):
+        return
     show_admin_panel(message.chat.id)
+
+# ----------------- PRIVATE CHAT ONLY -----------------
+def is_private_chat(chat):
+    """The bot works only in direct/private inbox chats."""
+    return bool(chat) and getattr(chat, "type", None) == "private"
 
 # ----------------- MENU NAVIGATION KEYBOARD -----------------
 def get_menu_keyboard(chat_id=None):
@@ -1346,8 +1353,10 @@ def force_join_check(chat_id, user_id, message_id=None):
 
 # ----------------- TELEGRAM MAIN HANDLERS -----------------
 
-@bot.message_handler(commands=['start'])
+@bot.message_handler(commands=['start'], func=lambda m: is_private_chat(m.chat))
 def send_welcome(message):
+    if not is_private_chat(message.chat):
+        return
     chat_id = message.chat.id
     user_id = message.from_user.id
     register_user_profile(message.from_user)
@@ -1390,6 +1399,8 @@ def send_welcome(message):
 
 @bot.message_handler(func=lambda m: m.text in ["🚀 Deploy New", "📁 My Dashboard", "🖥️ Server Status", "❔ Help", "👑 Admin Panel"])
 def handle_navigation_buttons(message):
+    if not is_private_chat(message.chat):
+        return
     chat_id = message.chat.id
     user_id = message.from_user.id
 
@@ -1435,6 +1446,9 @@ def handle_navigation_buttons(message):
 
 @bot.callback_query_handler(func=lambda call: True)
 def callback_listener(call):
+    # Ignore all button presses outside the bot's direct/private inbox.
+    if not call.message or not is_private_chat(call.message.chat):
+        return
     chat_id = call.message.chat.id
     user_id = call.from_user.id
     data = call.data
@@ -2241,6 +2255,8 @@ def callback_listener(call):
 
 @bot.message_handler(content_types=['document'])
 def handle_incoming_documents(message):
+    if not is_private_chat(message.chat):
+        return
     chat_id = message.chat.id
     user_id = message.from_user.id
 
@@ -2395,6 +2411,8 @@ def handle_incoming_documents(message):
 
 @bot.message_handler(func=lambda m: True)
 def handle_incoming_text(message):
+    if not is_private_chat(message.chat):
+        return
     chat_id = message.chat.id
     user_id = message.from_user.id
 
