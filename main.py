@@ -84,7 +84,7 @@ def _load_runtime_admin_settings():
             settings = data.get("_settings", {})
             if isinstance(settings, dict):
                 for key in (
-                    "force_join_enabled", "force_channel", "force_join_link", "maintenance_mode",
+                    "force_join_enabled", "force_channel", "force_channels", "force_join_link", "maintenance_mode",
                     "auto_restart_default", "deploy_enabled",
                     "dynamic_animation_enabled", "show_live_status",
                     "default_online_days", "default_project_limit",
@@ -95,6 +95,12 @@ def _load_runtime_admin_settings():
                         CONFIG[key] = settings[key]
                 CONFIG["force_join_enabled"] = bool(CONFIG.get("force_join_enabled", False))
                 CONFIG["force_channel"] = str(CONFIG.get("force_channel", "") or "")
+                stored_channels = CONFIG.get("force_channels", [])
+                if not isinstance(stored_channels, list):
+                    stored_channels = []
+                CONFIG["force_channels"] = [str(x).strip() for x in stored_channels if str(x).strip()]
+                if not CONFIG["force_channels"] and CONFIG["force_channel"]:
+                    CONFIG["force_channels"] = [CONFIG["force_channel"]]
                 CONFIG["force_join_link"] = str(CONFIG.get("force_join_link", "") or "")
     except Exception:
         pass
@@ -112,6 +118,7 @@ def _save_runtime_admin_settings():
         settings.update({
             "force_join_enabled": bool(CONFIG.get("force_join_enabled", False)),
             "force_channel": str(CONFIG.get("force_channel", "") or ""),
+            "force_channels": CONFIG.get("force_channels", []),
             "force_join_link": str(CONFIG.get("force_join_link", "") or ""),
             "maintenance_mode": bool(CONFIG.get("maintenance_mode", False)),
             "auto_restart_default": bool(CONFIG.get("auto_restart_default", True)),
@@ -136,7 +143,7 @@ def _save_runtime_admin_settings():
 def set_cfg(key, value):
     CONFIG[key] = value
     if key in (
-        "force_join_enabled", "force_channel", "force_join_link", "maintenance_mode",
+        "force_join_enabled", "force_channel", "force_channels", "force_join_link", "maintenance_mode",
         "auto_restart_default", "deploy_enabled",
         "dynamic_animation_enabled", "show_live_status",
         "default_online_days", "default_project_limit",
@@ -145,10 +152,87 @@ def set_cfg(key, value):
     ):
         _save_runtime_admin_settings()
 
-def set_force_channel(channel):
-    CONFIG["force_channel"] = channel.strip()
-    CONFIG["force_join_enabled"] = bool(CONFIG["force_channel"])
+def get_force_channels():
+    """Return all configured Force Join targets (unique, ordered)."""
+    channels = CONFIG.get("force_channels", [])
+    if not isinstance(channels, list):
+        channels = []
+    channels = [str(x).strip() for x in channels if str(x).strip()]
+
+    # Backward compatibility with older saved single-target configuration.
+    legacy = str(CONFIG.get("force_channel", "") or "").strip()
+    if legacy and legacy not in channels:
+        channels.insert(0, legacy)
+
+    seen = set()
+    result = []
+    for channel in channels:
+        key = channel.lower()
+        if key not in seen:
+            seen.add(key)
+            result.append(channel)
+    return result
+
+
+def _save_force_channels(channels):
+    clean = []
+    seen = set()
+    for channel in channels:
+        value = str(channel).strip()
+        if not value:
+            continue
+        key = value.lower()
+        if key not in seen:
+            seen.add(key)
+            clean.append(value)
+
+    CONFIG["force_channels"] = clean
+    # Keep legacy key synced so old parts of the bot remain compatible.
+    CONFIG["force_channel"] = clean[0] if clean else ""
+    CONFIG["force_join_enabled"] = bool(clean)
     _save_runtime_admin_settings()
+    return clean
+
+
+def set_force_channel(channel):
+    # Legacy helper: replace with one target.
+    _save_force_channels([channel.strip()] if str(channel).strip() else [])
+
+
+def add_force_channel_target(value):
+    """
+    Add one Force Join channel/group without removing existing targets.
+    Returns the verified Telegram chat object and True when newly added.
+    """
+    raw = str(value or "").strip()
+    if not raw:
+        raise ValueError("empty target")
+
+    target = int(raw) if raw.lstrip("-").isdigit() else "@" + raw.lstrip("@")
+    chat = bot.get_chat(target)
+
+    canonical = str(getattr(chat, "id", target))
+    existing = get_force_channels()
+    if canonical in existing or str(target) in existing:
+        return chat, False
+
+    existing.append(canonical)
+    _save_force_channels(existing)
+    return chat, True
+
+
+def remove_force_channel_target(target):
+    value = str(target).strip()
+    channels = get_force_channels()
+    remaining = [x for x in channels if str(x) != value]
+    if len(remaining) == len(channels):
+        return False
+    _save_force_channels(remaining)
+    return True
+
+
+def clear_force_channels():
+    _save_force_channels([])
 
 def set_owner_id(owner_id):
     CONFIG["owner_id"] = int(owner_id)
@@ -156,7 +240,8 @@ def set_owner_id(owner_id):
     OWNER_ID = int(owner_id)
 
 def get_force_channel():
-    return CONFIG.get("force_channel", "")
+    channels = get_force_channels()
+    return channels[0] if channels else ""
 
 def get_force_join_link():
     return CONFIG.get("force_join_link", "")
@@ -1268,6 +1353,9 @@ def show_admin_panel(chat_id, message_id=None):
         styled_button("📬 ɴᴏᴛɪꜰʏ ɢʀᴏᴜᴘ", callback_data="admin_report_menu")
     )
     m.add(
+        styled_button("📥 JSON STORE", callback_data="admin_download_json", style="success")
+    )
+    m.add(
         styled_button("🚫 ꜱᴜꜱᴘᴇɴᴅ ᴜꜱᴇʀ", callback_data="admin_suspend_user"),
         styled_button("🧹 ᴄʟᴇᴀʀ ᴇxᴘɪʀᴇᴅ", callback_data="admin_cleanup")
     )
@@ -1298,46 +1386,56 @@ def get_menu_keyboard(chat_id=None):
 
 # ----------------- FORCE JOIN CHECK (ডায়নামিক) -----------------
 def is_user_member(user_id):
-    if not cfg('force_join_enabled', False) or not get_force_channel():
+    channels = get_force_channels()
+    if not cfg('force_join_enabled', False) or not channels:
         return True
 
-    # Admin/owner never has to pass Force Join.
     if is_admin(user_id):
         return True
 
-    try:
-        member = bot.get_chat_member(get_force_channel(), user_id)
-        return member.status in ['member', 'administrator', 'creator', 'owner']
-    except Exception:
-        return False
-
+    # User must be a member of every configured Force Join target.
+    for channel in channels:
+        try:
+            member = bot.get_chat_member(channel, user_id)
+            if member.status not in ['member', 'administrator', 'creator', 'owner']:
+                return False
+        except Exception:
+            return False
+    return True
 def force_join_check(chat_id, user_id, message_id=None):
-    # Admin/owner bypasses Force Join everywhere.
     if is_admin(user_id):
         return True
 
-    if not cfg('force_join_enabled', False) or not get_force_channel():
+    channels = get_force_channels()
+    if not cfg('force_join_enabled', False) or not channels:
         return True
 
     if not is_user_member(user_id):
-        markup = types.InlineKeyboardMarkup()
-        join_link = get_force_join_link()
+        markup = types.InlineKeyboardMarkup(row_width=1)
 
-        if join_link:
-            markup.add(styled_button("📢 ᴊᴏɪɴ ɴᴏᴡ", url=join_link))
-            markup.add(styled_button("✅ ᴠᴇʀɪꜰʏ", callback_data="force_join_verify", style="success"))
-            text = (
-                "📢 ꜰᴏʀᴄᴇ ᴊᴏɪɴ ʀᴇQᴜɪʀᴇᴅ\n"
-                "━━━━━━━━━━━━━━━━━━\n\n"
-                "ᴊᴏɪɴ ᴛʜᴇ ʀᴇQᴜɪʀᴇᴅ ᴄʜᴀɴɴᴇʟ ᴏʀ ɢʀᴏᴜᴘ, ᴛʜᴇɴ ᴛʀʏ ᴀɢᴀɪɴ."
-            )
-        else:
-            markup.add(styled_button("✅ ᴠᴇʀɪꜰʏ", callback_data="force_join_verify", style="success"))
-            text = (
-                "📢 ꜰᴏʀᴄᴇ ᴊᴏɪɴ ʀᴇQᴜɪʀᴇᴅ\n"
-                "━━━━━━━━━━━━━━━━━━\n\n"
-                "ᴀᴅᴍɪɴ ʜᴀꜱ ꜱᴇᴛ ᴀ ᴘʀɪᴠᴀᴛᴇ ɢʀᴏᴜᴘ/ᴄʜᴀɴɴᴇʟ ɪᴅ. ᴀ ᴊᴏɪɴ ʟɪɴᴋ ɪꜱ ʀᴇQᴜɪʀᴇᴅ ꜰᴏʀ ᴀ ᴏɴᴇ-ᴛᴀᴘ ᴊᴏɪɴ ʙᴜᴛᴛᴏɴ."
-            )
+        for idx, channel in enumerate(channels, 1):
+            link = ""
+            try:
+                chat = bot.get_chat(channel)
+                username = getattr(chat, "username", None)
+                invite_link = getattr(chat, "invite_link", None)
+                if username:
+                    link = f"https://t.me/{username}"
+                elif invite_link:
+                    link = str(invite_link)
+            except Exception:
+                pass
+
+            if link:
+                markup.add(styled_button(f"📢 JOIN {idx}", url=link))
+
+        markup.add(styled_button("✅ VERIFY", callback_data="force_join_verify", style="success"))
+
+        text = (
+            "📢 FORCE JOIN REQUIRED\n"
+            "━━━━━━━━━━━━━━━━━━\n\n"
+            f"Join all {len(channels)} required channel/group target(s), then tap VERIFY."
+        )
 
         if message_id:
             bot_edit_message(text, chat_id, message_id, reply_markup=markup)
@@ -1346,7 +1444,6 @@ def force_join_check(chat_id, user_id, message_id=None):
         return False
 
     return True
-
 # ----------------- FORCE JOIN MANAGEMENT -----------------
 # Force Join is managed only from the in-bot Admin Panel.
 # No channel username is preconfigured inside main.py.
@@ -1546,28 +1643,105 @@ def callback_listener(call):
             show_admin_panel(chat_id, call.message.message_id)
             return
 
-        if data == "admin_force_menu":
+        # Download the bot's current JSON storage/metadata file.
+        if data == "admin_download_json":
+            try:
+                user_states[chat_id] = None
+
+                # Flush the latest runtime settings into the JSON store first.
+                _save_runtime_admin_settings()
+
+                # Ensure the storage file exists even on a fresh bot.
+                if not os.path.exists(META_FILE):
+                    save_meta(load_meta())
+
+                with open(META_FILE, "rb") as json_file:
+                    bot.send_document(
+                        chat_id,
+                        json_file,
+                        caption="📥 JSON STORE BACKUP\n━━━━━━━━━━━━━━━━━━\nCurrent bot storage file."
+                    )
+
+                bot.answer_callback_query(call.id, "JSON store sent.")
+            except Exception as e:
+                print(f"[Admin] JSON download failed: {e}")
+                bot.answer_callback_query(call.id, "❌ Could not send JSON store.", show_alert=True)
+            return
+
+        if data in ("admin_force_menu", "admin_force"):
+            channels = get_force_channels()
+            lines = []
+            for i, channel in enumerate(channels, 1):
+                lines.append(f"{i}. {channel}")
+
             text = (
-                "📢 ꜰᴏʀᴄᴇ ᴊᴏɪɴ ᴄᴏɴᴛʀᴏʟ\n"
-                "━━━━━━━━━━━━━━━━━━\n"
+                "📢 FORCE JOIN CONTROL\n"
+                "━━━━━━━━━━━━━━━━━━\n\n"
                 f"Status: {_onoff(bool(cfg('force_join_enabled', False)))}\n"
-                f"Target: {get_force_channel() or 'Not set'}\n"
-                f"Join link: {get_force_join_link() or 'Not available'}\n\n"
-                "Choose an action:"
+                f"Channels / Groups: {len(channels)}\n\n"
+                + ("\n".join(lines) if lines else "No channel/group added yet.")
             )
-            m = types.InlineKeyboardMarkup(row_width=2)
-            m.add(
-                styled_button("🟢 Enable", callback_data="admin_force_enable"),
-                styled_button("🔴 Disable", callback_data="admin_force_disable")
-            )
-            m.add(styled_button("✏️ Set / Change Channel", callback_data="admin_force_set"))
-            m.add(styled_button("🔗 Set / Change Join Link", callback_data="admin_force_link_set"))
-            m.add(styled_button("🗑 Remove Channel / Group", callback_data="admin_force_remove", style="danger"))
-            m.add(styled_button("🗑 Remove Join Link", callback_data="admin_force_link_remove", style="danger"))
-            m.add(styled_button("🔙 Back", callback_data="admin_panel"))
+
+            m = types.InlineKeyboardMarkup(row_width=1)
+            m.add(styled_button("➕ ADD CHANNEL", callback_data="admin_force_set", style="success"))
+            for i, channel in enumerate(channels):
+                m.add(styled_button(f"🗑 DELETE {i + 1}", callback_data=f"admin_force_delete_confirm:{i}", style="danger"))
+            m.add(styled_button("↩ BACK", callback_data="admin_panel"))
             bot_edit_message(text, chat_id, call.message.message_id, parse_mode="Markdown", reply_markup=m)
             return
 
+        if data.startswith("admin_force_delete_confirm:"):
+            try:
+                index = int(data.split(":", 1)[1])
+                channels = get_force_channels()
+                target = channels[index]
+            except Exception:
+                bot.answer_callback_query(call.id, "Invalid channel.", show_alert=True)
+                return
+
+            text = (
+                "⚠️ CONFIRM DELETE\n"
+                "━━━━━━━━━━━━━━━━━━\n\n"
+                f"Channel / Group:\n{target}\n\n"
+                "Are you sure you want to remove this target?"
+            )
+            m = types.InlineKeyboardMarkup(row_width=2)
+            m.add(
+                styled_button("🗑 CONFIRM", callback_data=f"admin_force_delete:{index}", style="danger"),
+                styled_button("✖ CANCEL", callback_data="admin_force_menu")
+            )
+            bot_edit_message(text, chat_id, call.message.message_id, reply_markup=m)
+            return
+
+        if data.startswith("admin_force_delete:"):
+            try:
+                index = int(data.split(":", 1)[1])
+                channels = get_force_channels()
+                target = channels[index]
+            except Exception:
+                bot.answer_callback_query(call.id, "Invalid channel.", show_alert=True)
+                return
+
+            remaining = [x for i, x in enumerate(channels) if i != index]
+            _save_force_channels(remaining)
+            bot.answer_callback_query(call.id, "Channel deleted")
+            # Reopen the updated Force Join menu.
+            channels = get_force_channels()
+            lines = [f"{i}. {channel}" for i, channel in enumerate(channels, 1)]
+            text = (
+                "📢 FORCE JOIN CONTROL\n"
+                "━━━━━━━━━━━━━━━━━━\n\n"
+                f"Status: {_onoff(bool(cfg('force_join_enabled', False)))}\n"
+                f"Channels / Groups: {len(channels)}\n\n"
+                + ("\n".join(lines) if lines else "No channel/group added yet.")
+            )
+            m = types.InlineKeyboardMarkup(row_width=1)
+            m.add(styled_button("➕ ADD CHANNEL", callback_data="admin_force_set", style="success"))
+            for i, channel in enumerate(channels):
+                m.add(styled_button(f"🗑 DELETE {i + 1}", callback_data=f"admin_force_delete_confirm:{i}", style="danger"))
+            m.add(styled_button("↩ BACK", callback_data="admin_panel"))
+            bot_edit_message(text, chat_id, call.message.message_id, reply_markup=m)
+            return
         if data == "admin_force_enable":
             if not get_force_channel():
                 user_states[chat_id] = "ADMIN_FORCE_CHANNEL"
@@ -1612,19 +1786,27 @@ def callback_listener(call):
             _save_runtime_admin_settings()
 
             text = (
-                "🗑 ꜰᴏʀᴄᴇ ᴊᴏɪɴ ᴛᴀʀɢᴇᴛ ʀᴇᴍᴏᴠᴇᴅ\n"
+                "🗑 CHANNEL DELETED\n"
                 "━━━━━━━━━━━━━━━━━━\n\n"
-                "ᴛʜᴇ ᴄʜᴀɴɴᴇʟ / ɢʀᴏᴜᴘ ʜᴀꜱ ʙᴇᴇɴ ᴄʟᴇᴀʀᴇᴅ ᴀɴᴅ ꜰᴏʀᴄᴇ ᴊᴏɪɴ ɪꜱ ɴᴏᴡ ᴅɪꜱᴀʙʟᴇᴅ."
+                "Force Join has been turned off."
             )
             m = types.InlineKeyboardMarkup()
-            m.add(styled_button("🔙 Back", callback_data="admin_force"))
+            m.add(styled_button("↩ BACK", callback_data="admin_force_menu"))
             bot_edit_message(text, chat_id, call.message.message_id, reply_markup=m)
-            bot.answer_callback_query(call.id, "Channel / Group removed")
+            bot.answer_callback_query(call.id, "Channel deleted")
             return
 
-        if data in ("admin_force_set", "admin_force"):
+        if data == "admin_force_set":
             user_states[chat_id] = "ADMIN_FORCE_CHANNEL"
-            bot_send_message(chat_id, "📢 Send @username or numeric channel/group ID.\n\nExamples:\n@mychannel\n-1001234567890\n\nSend OFF to disable Force Join.", reply_markup=admin_back_markup())
+            bot_send_message(
+                chat_id,
+                "📢 SEND ONE CHANNEL OR GROUP\n"
+                "━━━━━━━━━━━━━━━━━━\n\n"
+                "Send @username or numeric channel/group ID.\n\n"
+                "Examples:\n@mychannel\n-1001234567890\n\n"
+                "This will ADD another required target.",
+                reply_markup=admin_back_markup()
+            )
             return
 
         if data == "admin_report_menu":
@@ -2653,42 +2835,39 @@ def handle_incoming_text(message):
 
     if is_admin(user_id) and state == "ADMIN_FORCE_CHANNEL":
         value = (message.text or "").strip()
-        if value.upper() == "OFF":
+        if value.upper() in ("CANCEL", "OFF"):
             user_states[chat_id] = None
-            CONFIG["force_join_enabled"] = False
-            CONFIG["force_channel"] = ""
-            CONFIG["force_join_link"] = ""
-            _save_runtime_admin_settings()
-            bot.reply_to(message, "🟢 ꜰᴏʀᴄᴇ ᴊᴏɪɴ ᴅɪꜱᴀʙʟᴇᴅ.")
+            bot.reply_to(message, "❌ Adding channel cancelled.")
             return
 
         try:
-            chat = set_force_join_target(value)
-            set_cfg("force_join_enabled", True)
+            chat, added = add_force_channel_target(value)
             user_states[chat_id] = None
 
-            title = getattr(chat, "title", "") or getattr(chat, "username", "") or str(get_force_channel())
-            target = get_force_channel()
-            join_link = get_force_join_link()
+            title = getattr(chat, "title", "") or getattr(chat, "username", "") or str(getattr(chat, "id", value))
+            target = str(getattr(chat, "id", value))
 
-            result = (
-                "🟢 ꜰᴏʀᴄᴇ ᴊᴏɪɴ ꜱᴇᴛ\n"
-                "━━━━━━━━━━━━━━━━━━\n\n"
-                f"📢 ᴛᴀʀɢᴇᴛ: {title}\n"
-                f"🆔 ɪᴅ / ᴜꜱᴇʀɴᴀᴍᴇ: {target}\n"
-            )
-            if join_link:
-                result += f"🔗 ᴊᴏɪɴ ʟɪɴᴋ: {join_link}\n"
+            if added:
+                result = (
+                    "🟢 CHANNEL / GROUP ADDED\n"
+                    "━━━━━━━━━━━━━━━━━━\n\n"
+                    f"📢 TARGET: {title}\n"
+                    f"🆔 ID: {target}\n\n"
+                    f"Total Force Join targets: {len(get_force_channels())}"
+                )
             else:
-                result += "⚠️ ɴᴏ ᴘᴜʙʟɪᴄ ᴊᴏɪɴ ʟɪɴᴋ ᴡᴀꜱ ᴀᴠᴀɪʟᴀʙʟᴇ. ᴍᴇᴍʙᴇʀꜱʜɪᴘ ᴄʜᴇᴄᴋ ᴡɪʟʟ ꜱᴛɪʟʟ ᴜꜱᴇ ᴛʜᴇ ɪᴅ."
+                result = (
+                    "ℹ️ ALREADY ADDED\n"
+                    "━━━━━━━━━━━━━━━━━━\n\n"
+                    f"📢 TARGET: {title}"
+                )
             bot.reply_to(message, result)
-        except Exception as e:
+        except Exception:
             user_states[chat_id] = "ADMIN_FORCE_CHANNEL"
             bot.reply_to(
                 message,
-                "🔴 ᴄᴏᴜʟᴅ ɴᴏᴛ ᴀᴄᴄᴇꜱꜱ ᴛʜɪꜱ ᴄʜᴀɴɴᴇʟ/ɢʀᴏᴜᴘ.\n\n"
-                "ᴍᴀᴋᴇ ꜱᴜʀᴇ ᴛʜᴇ ʙᴏᴛ ɪꜱ ɪɴ ᴛʜᴇ ᴄʜᴀᴛ ᴀɴᴅ ʜᴀꜱ ᴘᴇʀᴍɪꜱꜱɪᴏɴ ᴛᴏ ᴄʜᴇᴄᴋ ᴍᴇᴍʙᴇʀꜱʜɪᴘ.\n\n"
-                "Send @username or numeric ID again."
+                "❌ Could not access this channel/group.\n\n"
+                "Make sure the bot has access and send @username or numeric ID again."
             )
         return
 
