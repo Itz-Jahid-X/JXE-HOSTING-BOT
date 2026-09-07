@@ -28,7 +28,7 @@ except ImportError:
 # ----------------- CENTRAL CONFIGURATION -----------------
 # সব সেটিংস main.py-এর ভিতরেই রাখা হয়েছে — আলাদা config.json লাগবে না।
 CONFIG = {
-    "bot_token": '8905165976:AAE03o7XQ95u4bRTaipeCZG64Whex6bJsWo',
+    "bot_token": '8474938545:AAG99txUTh07Rf3x92xNOBtAeNAsEtex5I8',
     "base_dir": "projects",
     "meta_file": "projects_meta.json",
 
@@ -1668,15 +1668,57 @@ def callback_listener(call):
             return
 
         if data == "admin_limit":
+            user_states[chat_id] = None
+            limit_text = (
+                "👤 USER PROJECT LIMITS\n"
+                "━━━━━━━━━━━━━━━━━━\n\n"
+                f"🌐 ALL USERS DEFAULT: {cfg('default_project_limit', 1)} project(s)\n\n"
+                "Choose which limit you want to change."
+            )
+            m = types.InlineKeyboardMarkup(row_width=2)
+            m.add(
+                styled_button("👤 SPECIFIC USER", callback_data="admin_limit_specific"),
+                styled_button("🌐 ALL USERS DEFAULT", callback_data="admin_limit_all", style="success")
+            )
+            m.add(styled_button("↩ BACK TO ADMIN", callback_data="admin_panel"))
+            bot_edit_message(
+                limit_text,
+                chat_id,
+                call.message.message_id,
+                reply_markup=m
+            )
+            bot.answer_callback_query(call.id)
+            return
+
+        if data == "admin_limit_specific":
             user_states[chat_id] = "ADMIN_USER_LIMIT"
             limit_text = (
-                "👤 ᴜꜱᴇʀ ᴘʀᴏᴊᴇᴄᴛ ʟɪᴍɪᴛ\n"
+                "👤 USER PROJECT LIMIT\n"
                 "━━━━━━━━━━━━━━━━━━\n\n"
-                "ꜱᴇɴᴅ ᴛʜᴇ ᴜꜱᴇʀ ɪᴅ ᴏʀ @ᴜꜱᴇʀɴᴀᴍᴇ ᴀɴᴅ ᴘʀᴏᴊᴇᴄᴛ ʟɪᴍɪᴛ.\n\n"
-                "📌 ꜰᴏʀᴍᴀᴛ\n"
+                "Send the USER ID or @USERNAME and project limit.\n\n"
+                "FORMAT\n"
                 "123456789 3\n"
                 "@username 3\n\n"
-                "ᴇxᴀᴍᴘʟᴇ: @The_Bad_Own 3"
+                "EXAMPLE: @The_Bad_Own 3"
+            )
+            bot_edit_message(
+                limit_text,
+                chat_id,
+                call.message.message_id,
+                reply_markup=admin_back_markup()
+            )
+            bot.answer_callback_query(call.id)
+            return
+
+        if data == "admin_limit_all":
+            user_states[chat_id] = "ADMIN_ALL_USERS_LIMIT"
+            limit_text = (
+                "🌐 ALL USERS PROJECT LIMIT\n"
+                "━━━━━━━━━━━━━━━━━━\n\n"
+                f"CURRENT DEFAULT: {cfg('default_project_limit', 1)} project(s)\n\n"
+                "Send the new default project limit.\n\n"
+                "Example: 5\n\n"
+                "This applies to users who do not have a custom limit."
             )
             bot_edit_message(
                 limit_text,
@@ -2660,6 +2702,26 @@ def handle_incoming_text(message):
             bot.reply_to(message, f"✅ Project limit updated: {limit}")
         except Exception:
             bot.reply_to(message, "❌ Send a valid non-negative number.")
+        return
+
+    if is_admin(user_id) and state == "ADMIN_ALL_USERS_LIMIT":
+        try:
+            limit = int((message.text or "").strip())
+            if limit < 0 or limit > 1000:
+                raise ValueError
+            set_cfg("default_project_limit", limit)
+            user_states[chat_id] = None
+            bot.reply_to(
+                message,
+                f"✅ ALL USERS DEFAULT LIMIT UPDATED\n\n"
+                f"🌐 Default project limit: {limit}\n"
+                "👤 Custom user limits remain unchanged."
+            )
+        except Exception:
+            bot.reply_to(
+                message,
+                "❌ Send a valid limit from 0 to 1000."
+            )
         return
 
     if is_admin(user_id) and state == "ADMIN_USER_LIMIT":
