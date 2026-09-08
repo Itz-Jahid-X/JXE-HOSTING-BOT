@@ -1402,6 +1402,26 @@ def is_user_member(user_id):
         except Exception:
             return False
     return True
+
+
+def get_unjoined_force_channels(user_id):
+    """Return only the Force Join targets the user has not joined yet."""
+    pending = []
+    if is_admin(user_id):
+        return pending
+
+    for idx, channel in enumerate(get_force_channels(), 1):
+        joined = False
+        try:
+            member = bot.get_chat_member(channel, user_id)
+            joined = member.status in ['member', 'administrator', 'creator', 'owner']
+        except Exception:
+            joined = False
+
+        if not joined:
+            pending.append((idx, channel))
+
+    return pending
 def force_join_check(chat_id, user_id, message_id=None):
     if is_admin(user_id):
         return True
@@ -1410,40 +1430,58 @@ def force_join_check(chat_id, user_id, message_id=None):
     if not cfg('force_join_enabled', False) or not channels:
         return True
 
-    if not is_user_member(user_id):
-        markup = types.InlineKeyboardMarkup(row_width=1)
+    pending = get_unjoined_force_channels(user_id)
 
-        for idx, channel in enumerate(channels, 1):
-            link = ""
-            try:
-                chat = bot.get_chat(channel)
-                username = getattr(chat, "username", None)
-                invite_link = getattr(chat, "invite_link", None)
-                if username:
-                    link = f"https://t.me/{username}"
-                elif invite_link:
-                    link = str(invite_link)
-            except Exception:
-                pass
+    # Auto-verified: user already joined every configured target.
+    if not pending:
+        return True
 
-            if link:
-                markup.add(styled_button(f"📢 JOIN {idx}", url=link))
+    # Only channels/groups the user has NOT joined are displayed.
+    markup = types.InlineKeyboardMarkup(row_width=2)
 
-        markup.add(styled_button("✅ VERIFY", callback_data="force_join_verify", style="success"))
+    join_buttons = []
+    for original_index, channel in pending:
+        link = ""
+        try:
+            chat = bot.get_chat(channel)
+            username = getattr(chat, "username", None)
+            invite_link = getattr(chat, "invite_link", None)
+            if username:
+                link = f"https://t.me/{username}"
+            elif invite_link:
+                link = str(invite_link)
+        except Exception:
+            pass
 
-        text = (
-            "📢 FORCE JOIN REQUIRED\n"
-            "━━━━━━━━━━━━━━━━━━\n\n"
-            f"Join all {len(channels)} required channel/group target(s), then tap VERIFY."
-        )
+        if link:
+            join_buttons.append(
+                styled_button(f"📢 JOIN {original_index}", url=link)
+            )
 
-        if message_id:
-            bot_edit_message(text, chat_id, message_id, reply_markup=markup)
-        else:
-            bot_send_message(chat_id, text, reply_markup=markup)
-        return False
+    # Join buttons are arranged automatically:
+    # JOIN 1 | JOIN 2
+    # JOIN 3
+    if join_buttons:
+        markup.add(*join_buttons)
 
-    return True
+    # Verify is always below the Join buttons.
+    markup.add(
+        styled_button("✅ VERIFY", callback_data="force_join_verify", style="success")
+    )
+
+    text = (
+        "📢 FORCE JOIN REQUIRED\n"
+        "━━━━━━━━━━━━━━━━━━\n\n"
+        f"Join the remaining {len(pending)} channel/group target(s).\n"
+        "Already joined targets are automatically hidden.\n\n"
+        "After joining, tap VERIFY."
+    )
+
+    if message_id:
+        bot_edit_message(text, chat_id, message_id, reply_markup=markup)
+    else:
+        bot_send_message(chat_id, text, reply_markup=markup)
+    return False
 # ----------------- FORCE JOIN MANAGEMENT -----------------
 # Force Join is managed only from the in-bot Admin Panel.
 # No channel username is preconfigured inside main.py.
@@ -1556,15 +1594,18 @@ def callback_listener(call):
             bot.answer_callback_query(call.id, "Verified")
             return
 
-        if not cfg('force_join_enabled', False) or not get_force_channel():
+        if not cfg('force_join_enabled', False) or not get_force_channels():
             bot.answer_callback_query(call.id, "Force Join is not active.")
             return
 
+        # Re-check every target. Any channel already joined disappears automatically.
         if not is_user_member(user_id):
+            force_join_check(chat_id, user_id, call.message.message_id)
+            remaining = len(get_unjoined_force_channels(user_id))
             bot.answer_callback_query(
                 call.id,
-                "❌ Not verified yet. Join the required channel/group first, then tap Verify.",
-                show_alert=True
+                f"⏳ {remaining} channel/group remaining.",
+                show_alert=False
             )
             return
 
