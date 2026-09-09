@@ -9,6 +9,7 @@ import re
 import shutil
 import socket
 import secrets
+import platform
 import requests
 import urllib3
 import telebot
@@ -351,6 +352,7 @@ def styled_reply_button(text, **kwargs):
 # ---------------------------------------------------------------
 
 bot = telebot.TeleBot(BOT_TOKEN)
+BOT_STARTED_AT = time.time()
 print("[ButtonStyle] Telegram button styles enabled: blue=primary, green=success, red=danger")
 
 
@@ -525,6 +527,100 @@ def update_project_files_map(proj_id, proj_dir):
     return files_map
 
 # ----------------- DIAGNOSTICS & SYSTEM METRICS -----------------
+def get_detailed_system_stats(viewer_user=None):
+    """Detailed admin system dashboard; existing features are preserved."""
+    meta = load_meta()
+    projects = {k: v for k, v in meta.items() if not str(k).startswith("_") and isinstance(v, dict)}
+    settings = meta.get("_settings", {}) if isinstance(meta.get("_settings", {}), dict) else {}
+    registered_users = settings.get("users", {}) if isinstance(settings.get("users", {}), dict) else {}
+    project_user_ids = {str(v.get("chat_id")) for v in projects.values() if v.get("chat_id") is not None}
+    total_users = len(set(registered_users.keys()) | project_user_ids)
+    running = sum(1 for pid, pdata in projects.items() if get_project_status(pid, pdata).startswith("🟢"))
+    queued = len(settings.get("start_queue", []) or [])
+    active = active_project_count()
+
+    cpu_p = ram_p = disk_p = 0.0
+    disk_total_gb = disk_used_gb = disk_free_gb = 0.0
+    process_ram_mb = process_cpu_p = 0.0
+    load_1m = "N/A"
+    boot_uptime = "N/A"
+    try:
+        if psutil:
+            cpu_p = round(psutil.cpu_percent(interval=None), 1)
+            ram_p = round(psutil.virtual_memory().percent, 1)
+            du = shutil.disk_usage("/")
+            disk_total_gb = round(du.total / (1024 ** 3), 2)
+            disk_used_gb = round(du.used / (1024 ** 3), 2)
+            disk_free_gb = round(du.free / (1024 ** 3), 2)
+            disk_p = round((du.used / du.total) * 100, 1) if du.total else 0.0
+            try:
+                proc = psutil.Process(os.getpid())
+                process_ram_mb = round(proc.memory_info().rss / (1024 ** 2), 2)
+                process_cpu_p = round(proc.cpu_percent(interval=None), 1)
+            except Exception:
+                pass
+            try:
+                load_1m = f"{os.getloadavg()[0]:.2f}"
+            except Exception:
+                pass
+            try:
+                boot_uptime = format_remaining(max(0, time.time() - psutil.boot_time()))
+            except Exception:
+                pass
+    except Exception:
+        pass
+
+    bot_uptime = format_remaining(max(0, time.time() - BOT_STARTED_AT))
+    username = "No username"
+    display_name = "Unknown"
+    viewer_id = "Unknown"
+    if viewer_user is not None:
+        viewer_id = getattr(viewer_user, "id", "Unknown")
+        username = f"@{viewer_user.username}" if getattr(viewer_user, "username", None) else "No username"
+        display_name = " ".join(x for x in [getattr(viewer_user, "first_name", "") or "", getattr(viewer_user, "last_name", "") or ""] if x).strip() or "Unknown"
+
+    report_id = get_report_group_id()
+    return (
+        "📊 ᴅᴇᴛᴀɪʟᴇᴅ ꜱʏꜱᴛᴇᴍ ꜱᴛᴀᴛꜱ\n"
+        "━━━━━━━━━━━━━━━━━━\n\n"
+        "👤 ᴄᴜʀʀᴇɴᴛ ᴀᴅᴍɪɴ\n"
+        f"• Name: {display_name}\n"
+        f"• Username: {username}\n"
+        f"• Chat ID: {viewer_id}\n\n"
+        "🤖 ʙᴏᴛ / ʀᴜɴᴛɪᴍᴇ\n"
+        f"• Bot uptime: {bot_uptime}\n"
+        f"• Python: {platform.python_version()}\n"
+        f"• OS: {platform.system()} {platform.release()}\n"
+        f"• Host: {socket.gethostname()}\n"
+        f"• PID: {os.getpid()}\n"
+        f"• Threads: {threading.active_count()}\n"
+        f"• Process CPU: {process_cpu_p}%\n"
+        f"• Process RAM: {process_ram_mb} MB\n\n"
+        "🖥️ ʜᴏꜱᴛ ꜱʏꜱᴛᴇᴍ\n"
+        f"• CPU: {cpu_p}%\n"
+        f"• RAM: {ram_p}%\n"
+        f"• Disk: {disk_p}% used\n"
+        f"• Storage: {disk_used_gb} / {disk_total_gb} GB\n"
+        f"• Free: {disk_free_gb} GB\n"
+        f"• Load 1m: {load_1m}\n"
+        f"• Server uptime: {boot_uptime}\n\n"
+        "📦 ʜᴏꜱᴛɪɴɢ ꜱᴛᴀᴛꜱ\n"
+        f"• Users: {total_users}\n"
+        f"• Projects: {len(projects)}\n"
+        f"• Running: {running}\n"
+        f"• Active processes: {active}\n"
+        f"• Queued: {queued}\n"
+        f"• Max concurrent: {cfg('max_concurrent_projects', 8)}\n\n"
+        "⚙️ ʙᴏᴛ ꜱᴇᴛᴛɪɴɢꜱ\n"
+        f"• Maintenance: {_onoff(bool(cfg('maintenance_mode', False)))}\n"
+        f"• Deploy: {_onoff(bool(cfg('deploy_enabled', True)))}\n"
+        f"• Auto restart: {_onoff(bool(cfg('auto_restart_default', True)))}\n"
+        f"• Queue: {_onoff(bool(cfg('queue_enabled', True)))}\n"
+        f"• Force Join targets: {len(get_force_channels())}\n"
+        f"• Report Group: {_onoff(report_enabled())}\n"
+        f"• Report ID: {report_id or 'Not set'}"
+    )
+
 def get_server_stats():
     cpu_p, ram_p, disk_p, free_gb = 12.0, 39.5, 50.0, 35.0
     env_mode = "Cloud Compute"
@@ -2012,18 +2108,13 @@ def callback_listener(call):
             return
 
         if data == "admin_stats":
-            meta = load_meta()
-            projects = {k: v for k, v in meta.items() if not k.startswith("_")}
-            running = sum(1 for pid, pdata in projects.items() if get_project_status(pid, pdata).startswith("🟢"))
-            users = len({v.get("chat_id") for v in projects.values() if v.get("chat_id")})
             bot_edit_message(
-                "📊 ꜱᴇʀᴠɪᴄᴇ ꜱᴛᴀᴛꜱ\n━━━━━━━━━━━━━━━━━━\n"
-                f"👥 Users: `{users}`\n"
-                f"📦 Projects: {len(projects)}\n"
-                f"🟢 Running: {running}\n"
-                f"🔴 Stopped: {max(0, len(projects)-running)}\n"
-                f"🛠 Maintenance: {_onoff(bool(cfg('maintenance_mode', False)))}",
-                chat_id, call.message.message_id, parse_mode="Markdown", reply_markup=admin_back_markup()
+                get_detailed_system_stats(getattr(call, "from_user", None)),
+                chat_id, call.message.message_id, parse_mode="Markdown",
+                reply_markup=types.InlineKeyboardMarkup().add(
+                    styled_button("🔄 Refresh", callback_data="admin_stats"),
+                    styled_button("🔙 Back", callback_data="admin_panel")
+                )
             )
             return
 
