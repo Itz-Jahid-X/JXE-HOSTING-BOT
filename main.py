@@ -1201,24 +1201,33 @@ def report_enabled():
     return bool(cfg("report_group_enabled", False)) and bool(get_report_group_id())
 
 def report_upload(message, action, project_name=None, main_file=None):
+    """Send the original uploaded Telegram document to the report group."""
     if not report_enabled():
-        return
+        print(f"[Report] NOT SENT: report_group_enabled={cfg('report_group_enabled', False)}, group_id={get_report_group_id()}")
+        return False
 
     try:
+        document = getattr(message, "document", None)
+        if not document or not getattr(document, "file_id", None):
+            raise ValueError("Incoming message has no valid Telegram document/file_id")
+
         u = message.from_user
         username = f"@{u.username}" if getattr(u, "username", None) else "No username"
         display = " ".join(
             x for x in [getattr(u, "first_name", ""), getattr(u, "last_name", "")]
             if x
         ).strip() or "Unknown"
+        file_name = getattr(document, "file_name", "document") or "document"
 
+        # Plain text is intentional: filenames/usernames can contain Markdown
+        # characters, which previously could make Telegram reject the caption.
         caption = (
             "📥 FILE RECEIVED\n"
             "━━━━━━━━━━━━━━━━━━\n\n"
             f"👤 USER: {display}\n"
             f"🔗 USERNAME: {username}\n"
             f"🆔 CHAT ID: {u.id}\n"
-            f"📦 FILE: {getattr(message.document, 'file_name', 'document')}\n"
+            f"📦 FILE: {file_name}\n"
             f"⚙️ ACTION: {action}"
         )
         if project_name:
@@ -1226,14 +1235,27 @@ def report_upload(message, action, project_name=None, main_file=None):
         if main_file:
             caption += f"\n🚀 RUN: {main_file}"
 
-        bot.send_document(
+        # Send the exact original Telegram file. No re-download/re-upload is needed.
+        bot_send_document(
             get_report_group_id(),
-            message.document.file_id,
-            caption=caption,
-            parse_mode="Markdown"
+            document.file_id,
+            caption=caption
         )
+        print(f"[Report] SENT OK -> group={get_report_group_id()} file={file_name}")
+        return True
     except Exception as e:
-        print(f"[Report] upload report failed: {e}")
+        print(f"[Report] SEND FAILED -> group={get_report_group_id()} error={type(e).__name__}: {e}")
+        try:
+            bot_send_message(
+                OWNER_ID,
+                "⚠️ REPORT GROUP FILE SEND FAILED\n\n"
+                f"Group ID: {get_report_group_id()}\n"
+                f"File: {getattr(getattr(message, 'document', None), 'file_name', 'document')}\n"
+                f"Error: {e}"
+            )
+        except Exception as notify_error:
+            print(f"[Report] Admin error notification failed: {notify_error}")
+        return False
 
 def report_project_event(proj_data, action):
     if not report_enabled():
@@ -2517,12 +2539,18 @@ def handle_incoming_documents(message):
             report_action = "FILE REPLACE"
         elif state == "AWAITING_ZIP":
             report_action = "PROJECT UPLOAD"
-        report_upload(
+        report_ok = report_upload(
             message,
             report_action,
             project_name=(message.document.file_name or "Uploaded file").rsplit(".", 1)[0],
             main_file=None
         )
+        if not report_ok:
+            bot.reply_to(
+                message,
+                "⚠️ Report Group-এ file পাঠানো যায়নি. Upload বন্ধ করা হয়েছে. Admin-এর Report Group ID ও bot permission check করুন."
+            )
+            return
 
     if state and state.startswith("REPLACE_FILE:"):
         _, proj_id, rel_path = state.split(":", 2)

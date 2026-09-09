@@ -4,7 +4,7 @@
             "8393671553": {
                 "username": "@Itz_Jahid_X",
                 "name": "\ud835\ude79\ud835\ude70\ud835\ude77\ud835\ude78\ud835\ude73\ud835\ude84\ud835\ude7b \ud835\ude77\ud835\ude70\ud835\ude82\ud835\ude70\ud835\ude7d",
-                "last_seen": 1788873977.7261887
+                "last_seen": 1788974908.0765483
             },
             "8905165976": {
                 "username": "@jxe_hosting_bot",
@@ -25,6 +25,26 @@
                 "username": "@abirsir171",
                 "name": "200+like in my group",
                 "last_seen": 1788841675.4282806
+            },
+            "5822205539": {
+                "username": "@kylasukajajan",
+                "name": "Kayla suka jajan",
+                "last_seen": 1788974773.1733196
+            },
+            "8237042199": {
+                "username": "@jihad_69xi",
+                "name": "J\u026a\u029c\u1d00\u1d05 H\u1d00s\u1d00\u0274",
+                "last_seen": 1788974841.7512553
+            },
+            "8976488107": {
+                "username": "@jxe_hosting_bot",
+                "name": "\ud835\ude79\ud835\ude87\ud835\ude74 \ud835\ude77\ud835\ude7e\ud835\ude82\ud835\ude83\ud835\ude78\ud835\ude7d\ud835\ude76 \ud835\ude71\ud835\ude7e\ud835\ude83",
+                "last_seen": 1788974904.643072
+            },
+            "8727506373": {
+                "username": "@Nasrin_jahanx",
+                "name": "Nasrin Jahan",
+                "last_seen": 1788975232.81237
             }
         },
         "force_join_enabled": true,
@@ -36,7 +56,7 @@
         "dynamic_animation_enabled": true,
         "show_live_status": true,
         "default_online_days": 2,
-        "default_project_limit": 2,
+        "default_project_limit": 1,
         "report_group_id": -1004311055158,
         "report_group_enabled": true,
         "max_concurrent_projects": 8,
@@ -46,7 +66,8 @@
         "force_channels": [
             "-1003750300679",
             "-1003713498416",
-            "-1003506280636"
+            "-1003506280636",
+            "-1003821941752"
         ]
     },
     "c97b34": {
@@ -123,5 +144,31 @@
         },
         "source_file_id": "BQACAgUAAxkBAANUap9AUYNZIIYCJ-qefyeCyGHLmzoAAp0fAAJZ6_lUdoIgudo3nVY9BA",
         "source_file_name": "like_bot.zip"
+    },
+    "f91665": {
+        "name": "JXE HOSTING BOT",
+        "dir": "projects/proj_8727506373_1788975548",
+        "main_file": "main.py",
+        "chat_id": 8727506373,
+        "username": "@Nasrin_jahanx",
+        "user_name": "Nasrin Jahan",
+        "auto_restart": true,
+        "created_at": 1788975548.3071115,
+        "expires_at": 1789148348.3071117,
+        "files": {
+            "0": "main.py",
+            "1": "requirements.txt"
+        },
+        "source_file_id": "BQACAgUAAxkBAAMoaqGZtZLxdeVN_HD7Zx0KVbuh96UAAichAALdfwhVMT8OQ6FSGIc9BA",
+        "source_file_name": "JXE HOSTING BOT.zip",
+        "security_blocked": false,
+        "port": 34521,
+        "activity": [
+            {
+                "time": 1788975556.0952287,
+                "event": "Started"
+            }
+        ],
+        "last_activity": 1788975556.09523
     }
 }
