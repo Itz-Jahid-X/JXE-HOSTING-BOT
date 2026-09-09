@@ -25,52 +25,31 @@ try:
 except ImportError:
     psutil = None
 
-# ----------------- CENTRAL CONFIGURATION -----------------
-# সব সেটিংস main.py-এর ভিতরেই রাখা হয়েছে — আলাদা config.json লাগবে না।
-CONFIG = {
-    "bot_token": '8474938545:AAG99txUTh07Rf3x92xNOBtAeNAsEtex5I8',
-    "base_dir": "projects",
-    "meta_file": "projects_meta.json",
+# ----------------- EXTERNAL CONFIGURATION -----------------
+# All editable bot settings are stored in config.json beside main.py.
+# Existing runtime/admin settings and bot features remain unchanged.
+BASE_PATH = os.path.dirname(os.path.abspath(__file__))
+CONFIG_FILE = os.path.join(BASE_PATH, "config.json")
 
-    # Admin / force join
-    "owner_id": 8393671553,
-    "force_join_enabled": False,
-    "force_channel": "",  # Added only from the bot Admin Panel
-    "force_join_link": "",
+try:
+    with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+        CONFIG = json.load(f)
+    if not isinstance(CONFIG, dict):
+        raise ValueError("config.json must contain a JSON object")
+except FileNotFoundError:
+    raise RuntimeError(
+        f"config.json not found: {CONFIG_FILE}. Put config.json in the same folder as main.py."
+    )
+except json.JSONDecodeError as e:
+    raise RuntimeError(f"Invalid config.json: {e}")
 
-    # User limits (admin panel থেকে বদলানো যাবে)
-    "default_project_limit": 1,
-    "default_online_days": 2,
-    "max_online_days": 30,
+BOT_TOKEN = os.getenv("BOT_TOKEN", CONFIG.get("bot_token", "")).strip()
+if not BOT_TOKEN:
+    raise RuntimeError("BOT_TOKEN is missing. Set bot_token in config.json or BOT_TOKEN environment variable.")
 
-    # Hosting / recovery
-    "auto_restart_default": True,
-    "monitor_interval_seconds": 8,
-    "expiry_cleanup_interval_seconds": 60,
-    "process_grace_seconds": 8,
-
-    # UI / animation
-    "animation_speed": 0.12,
-    "animation_style": "wave",   # wave | pulse | dots | orbit
-    "show_live_status": True,
-    "deploy_enabled": True,
-    "dynamic_animation_enabled": True,
-    "report_group_id": 0,
-    "report_group_enabled": False,
-    "max_concurrent_projects": 8,
-    "queue_enabled": True,
-    "queue_interval_seconds": 5,
-    "expiry_grace_hours": 24,
-    "crash_window_seconds": 300,
-    "max_crash_restarts": 5,
-    "max_file_edit_bytes": 524288,
-    "suspended_users": {},
-}
-
-BOT_TOKEN = os.getenv("BOT_TOKEN", CONFIG["bot_token"])
-BASE_DIR = CONFIG["base_dir"]
-META_FILE = CONFIG["meta_file"]
-OWNER_ID = int(CONFIG["owner_id"])
+BASE_DIR = CONFIG.get("base_dir", "projects")
+META_FILE = CONFIG.get("meta_file", "projects_meta.json")
+OWNER_ID = int(CONFIG.get("owner_id", 0))
 
 def cfg(key, default=None):
     return CONFIG.get(key, default)
