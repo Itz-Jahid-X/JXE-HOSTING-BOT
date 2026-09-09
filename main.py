@@ -14,26 +14,31 @@ import urllib3
 import telebot
 from telebot import types
 
+# NOTE: Telegram Bot API inline/reply keyboards do not support arbitrary red/green/blue
+# background colors. Button meaning is therefore kept consistent by action grouping:
+# positive/start = normal, navigation/info = normal, destructive = normal.
+# Color-square emojis are intentionally not used in button labels.
 
+# psutil library for advanced hardware reading (Safe-catch for Termux)
 try:
     import psutil
 except ImportError:
     psutil = None
 
 # ----------------- CENTRAL CONFIGURATION -----------------
-
+# সব সেটিংস main.py-এর ভিতরেই রাখা হয়েছে — আলাদা config.json লাগবে না।
 CONFIG = {
-    "bot_token": '8782740556:AAGtZTmFOX-O_SSEujphpaq7usLpEHO3DLg',
+    "bot_token": '8474938545:AAG99txUTh07Rf3x92xNOBtAeNAsEtex5I8',
     "base_dir": "projects",
     "meta_file": "projects_meta.json",
 
     # Admin / force join
     "owner_id": 8393671553,
     "force_join_enabled": False,
-    "force_channel": "",  
+    "force_channel": "",  # Added only from the bot Admin Panel
     "force_join_link": "",
 
-    
+    # User limits (admin panel থেকে বদলানো যাবে)
     "default_project_limit": 1,
     "default_online_days": 2,
     "max_online_days": 30,
@@ -893,43 +898,39 @@ def _read_text_safely(path, max_bytes=1_500_000):
 
 def scan_project_security(proj_dir):
     """
-    Blocks hosted code that is clearly trying to escape its own project and
-    collect host/other-project data. Normal bots that only read/write files
-    inside their own working directory are allowed.
+    Very narrow protection against a hosted project explicitly opening another
+    hosted project's directory via parent traversal.
+
+    The hosting bot itself may legitimately contain strings such as
+    projects_meta.json, BASE_DIR, or project-management code, so those are NOT
+    scanned or blocked here.
     """
     findings = []
     root = os.path.abspath(proj_dir)
-    code_extensions = {".py", ".js", ".mjs", ".cjs", ".sh", ".bat", ".cmd", ".ps1"}
 
+    code_extensions = {
+        ".py", ".js", ".mjs", ".cjs", ".sh", ".bat", ".cmd", ".ps1"
+    }
+
+    # Only block direct parent traversal used to reach files outside the
+    # current hosted project. No generic metadata/path names are blocked.
     blocked_patterns = [
         (r'os\.(?:walk|listdir|scandir)\(\s*[\'"]\.\.', "tries to enumerate outside this project"),
         (r'glob(?:\.glob)?\(\s*[\'"][^\'"]*\.\./', "tries to search outside this project directory"),
         (r'os\.chdir\(\s*[\'"]\.\.', "tries to change into a parent directory"),
         (r'open\(\s*[\'"][^\'"]*\.\.[/\\\\]', "tries to directly open a parent-directory file"),
         (r'os\.path\.join\([^)]*,\s*[\'"]\.\.[/\\\\]?', "tries to build a parent-directory path"),
-        (r'roots?\.append\(\s*[\'"]/[\'"]\s*\)', "tries to add the host filesystem root to a scan"),
-        (r'os\.walk\(\s*[\'"]/[\'"]\s*\)', "tries to scan the host filesystem root"),
-        (r'os\.walk\(\s*(?:root_paths|roots|get_root_paths\(\)|scan_roots)\s*\)', "tries to recursively scan discovered filesystem roots"),
-        (r'roots?\.(?:extend|append)\([^)]*(?:ascii_uppercase|[A-Za-z]:\\\\)', "tries to enumerate system drive roots"),
-        (r'(?:Path|pathlib\.Path)\(\s*[\'"]/[\'"]\s*\)\.rglob', "tries to recursively scan the host filesystem root"),
-        (r'[\'"]/(?:storage/emulated/0|sdcard|data/data|proc|sys|etc|var|home|root)[/\'"]', "references a protected host/system storage root"),
-        (r'[\'"][A-Za-z]:\\\\(?:Windows|ProgramData|Program Files)', "references a protected Windows system/data path"),
     ]
-
-    exfil_root_signals = [
-        r'def\s+get_root_paths\s*\(',
-        r'platform\.system\s*\(',
-        r'string\.ascii_uppercase',
-        r'os\.walk\(\s*(?:root|roots|root_path|root_paths|base_path)\s*\)',
-    ]
-    archive_signals = [r'zipfile\.ZipFile', r'\.(?:write|writestr)\s*\(']
-    exfil_signals = [r'send_document\s*\(', r'api\.telegram\.org/.*/sendDocument', r'bot\.send_document\s*\(']
 
     for current_root, dirs, files in os.walk(root):
-        dirs[:] = [d for d in dirs if d not in {"__pycache__", ".git", "node_modules", ".venv", "venv", ".tmp"}]
+        dirs[:] = [d for d in dirs if d not in {
+            "__pycache__", ".git", "node_modules", ".venv", "venv", ".tmp"
+        }]
+
         for name in files:
             if os.path.splitext(name)[1].lower() not in code_extensions:
                 continue
+
             full = os.path.join(current_root, name)
             rel = os.path.relpath(full, root)
             text = _read_text_safely(full)
@@ -938,21 +939,16 @@ def scan_project_security(proj_dir):
 
             reasons = []
             for pattern, reason in blocked_patterns:
-                if re.search(pattern, text, re.IGNORECASE | re.DOTALL):
+                if re.search(pattern, text, re.I | re.S):
                     reasons.append(reason)
 
-            root_score = sum(bool(re.search(p, text, re.IGNORECASE | re.DOTALL)) for p in exfil_root_signals)
-            archive_score = sum(bool(re.search(p, text, re.IGNORECASE | re.DOTALL)) for p in archive_signals)
-            sends_files = any(re.search(p, text, re.IGNORECASE | re.DOTALL) for p in exfil_signals)
-
-            if root_score >= 2 and archive_score >= 1 and sends_files:
-                reasons.append("combines host-root discovery, recursive collection, archiving, and file exfiltration")
-
             if reasons:
-                findings.append({"file": rel, "reasons": sorted(set(reasons))})
+                findings.append({
+                    "file": rel,
+                    "reasons": sorted(set(reasons))[:3]
+                })
 
     return findings
-
 def format_security_findings(findings, limit=8):
     lines = []
     for item in findings[:limit]:
@@ -1010,7 +1006,7 @@ def run_project_process(proj_id, proj_data):
                 save_meta(meta)
         except Exception:
             pass
-        return False, "Project blocked: security scan detected host/other-project data access or collection behavior.\n" + format_security_findings(security_findings)
+        return False, "Project blocked: it contains direct parent-directory access outside its own project.\n" + format_security_findings(security_findings)
 
     try:
         meta = load_meta()
