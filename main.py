@@ -3399,10 +3399,21 @@ if __name__ == '__main__':
     print("========================================")
     print("JXE HOSTING HUB ENGINE V1 ACTIVATED")
     print("========================================")
-    
+
+    # Telegram polling diagnostics / webhook cleanup.
+    # Existing bot features and handlers are kept unchanged.
+    try:
+        bot.remove_webhook()
+        time.sleep(1)
+        me = bot.get_me()
+        print(f"[Telegram] Connected as @{getattr(me, 'username', '') or 'unknown'} (ID: {getattr(me, 'id', 'unknown')})")
+        print("[Telegram] Polling started; waiting for updates...")
+    except Exception as startup_err:
+        print(f"[Telegram Startup Error] {type(startup_err).__name__}: {startup_err}")
+
     while True:
         try:
             bot.infinity_polling(timeout=60, long_polling_timeout=30)
         except Exception as polling_err:
-            print(f"[Polling Error] Network connection disrupted: {polling_err}. Auto-reconnecting in 5 seconds...")
+            print(f"[Polling Error] {type(polling_err).__name__}: {polling_err}. Auto-reconnecting in 3 seconds...")
             time.sleep(3)
