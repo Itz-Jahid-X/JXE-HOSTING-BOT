@@ -1,5 +1,4 @@
-# 🚀 JXE HOSTING BOT
-
+# JXE HOSTING BOT
 
 ![JXE Hosting
 Hub](https://capsule-render.vercel.app/api?type=waving&height=220&text=JXE%20HOSTING%20BOT&fontAlign=50&fontAlignY=38&desc=Telegram%20Powered%20Project%20Hosting%20Control%20Center&descAlignY=60&animation=twinkling&fontColor=ffffff&color=0:0f172a,50:2563eb,100:7c3aed)
@@ -13,12 +12,11 @@ Animation](https://readme-typing-svg.demolab.com?font=Fira+Code&weight=700&size=
 ![Status](https://img.shields.io/badge/Status-ONLINE-22c55e?style=for-the-badge)
 
 **A powerful Telegram-based hosting hub for deploying, monitoring,
-editing and controlling projects --- directly from Telegram.**
-:::
+editing and controlling projects --- directly from Telegram.** :::
 
 ------------------------------------------------------------------------
 
-## 📢 Official Telegram Channel
+## Official Telegram Channel
 
 [![Telegram
 Channel](https://img.shields.io/badge/Telegram-@Jahid__x__Empire-26A5E4?style=for-the-badge&logo=telegram&logoColor=white)](https://t.me/Jahid_x_Empire)
@@ -26,7 +24,7 @@ Channel](https://img.shields.io/badge/Telegram-@Jahid__x__Empire-26A5E4?style=fo
 **Updates, announcements & support:**
 [@Jahid_x_Empire](https://t.me/Jahid_x_Empire)
 
-## ✨ What Is JXE Hosting Bot?
+## What Is JXE Hosting Bot?
 
 **JXE Hosting Bot** turns a Telegram bot into a lightweight
 project-management and hosting control center.
@@ -37,9 +35,9 @@ restart crashed services, and create backups --- all through Telegram.
 
 ------------------------------------------------------------------------
 
-## ⚡ Features
+## Features
 
-### 📦 Deployment
+### Deployment
 
 -   Upload `.zip` project archives
 -   Automatic project directory creation
@@ -48,7 +46,7 @@ restart crashed services, and create backups --- all through Telegram.
 -   Automatic free-port allocation
 -   `PORT` environment support
 
-### 🖥️ Project Control
+### Project Control
 
 -   Start / Stop
 -   Restart
@@ -59,7 +57,7 @@ restart crashed services, and create backups --- all through Telegram.
 -   Restart counter
 -   Project dashboard
 
-### 📁 Online File Manager
+### Online File Manager
 
 -   Browse files
 -   View source
@@ -71,7 +69,7 @@ restart crashed services, and create backups --- all through Telegram.
 -   Download files
 -   Remove files
 
-### 🧰 Runtime Tools
+### Runtime Tools
 
 -   Live logs
 -   Full-log download
@@ -81,7 +79,7 @@ restart crashed services, and create backups --- all through Telegram.
 -   Auto-restart toggle
 -   Crash detection
 
-### 🛡️ Security
+### Security
 
 -   ZIP path traversal protection
 -   Symlink ZIP entry blocking
@@ -89,7 +87,7 @@ restart crashed services, and create backups --- all through Telegram.
 -   Outside-project path protection
 -   Restricted project environment
 
-### 👑 Admin System
+### Admin System
 
 -   Admin-only control panel
 -   User/project controls
@@ -104,43 +102,45 @@ restart crashed services, and create backups --- all through Telegram.
 
 ------------------------------------------------------------------------
 
-## 🎬 Animated Workflow
+## Animated Workflow
 
 ``` text
-                 👤 TELEGRAM USER
-                        │
-                        ▼
-                🚀 DEPLOY NEW
-                        │
-                        ▼
-                   📦 UPLOAD ZIP
-                        │
-                        ▼
-              🔐 VALIDATE + EXTRACT
-                        │
-                        ▼
-                  🎯 SELECT ENTRY
-                        │
-                        ▼
-                    🟢 START
-                        │
-          ┌─────────────┼─────────────┐
-          ▼             ▼             ▼
-      📊 MONITOR      ☷ LOGS       📁 FILES
-          │             │             │
-          └─────────────┼─────────────┘
-                        ▼
-                 ⚙️ CONTROL PANEL
-                        │
-                ┌───────┴───────┐
-                ▼               ▼
-            ♻️ AUTO          📦 BACKUP
-            RESTART
+                    TELEGRAM USER
+                         |
+                         v
+                    DEPLOY NEW
+                         |
+                         v
+                    UPLOAD ZIP
+                         |
+                         v
+                 VALIDATE + EXTRACT
+                         |
+                         v
+                    SELECT ENTRY
+                         |
+                         v
+                       START
+                         |
+              +----------+----------+
+              |          |          |
+              v          v          v
+           MONITOR      LOGS       FILES
+              |          |          |
+              +----------+----------+
+                         |
+                         v
+                    CONTROL PANEL
+                         |
+                    +----+----+
+                    |         |
+                    v         v
+                AUTO-RESTART BACKUP
 ```
 
 ------------------------------------------------------------------------
 
-## 🔄 Project Lifecycle
+## Project Lifecycle
 
 ![Lifecycle
 Animation](https://readme-typing-svg.demolab.com?font=JetBrains+Mono&weight=800&size=20&pause=600&color=22C55E&center=true&vCenter=true&width=900&lines=%5B01%5D+UPLOAD+%E2%86%92+%5B02%5D+EXTRACT+%E2%86%92+%5B03%5D+SCAN+%E2%86%92+%5B04%5D+RUN+%E2%86%92+%5B05%5D+MONITOR;Crash+%3F+%E2%86%92+Auto-Restart+%E2%86%92+Crash+Protection+%E2%86%92+Stable+Runtime)
@@ -151,18 +151,18 @@ pause automatic restarting.
 
 ------------------------------------------------------------------------
 
-## 📊 Live Monitoring
+## Live Monitoring
 
 ``` text
 ╭──────────────────────────────────────────╮
-│             🖥️ SERVER STATUS             │
+│ SERVER STATUS │
 ├──────────────────────────────────────────┤
-│ ☁️ Platform      : Cloud Compute         │
-│ ⚡ CPU           : LIVE                  │
-│ 💾 RAM           : LIVE                  │
-│ 📦 Storage       : LIVE                  │
-│ 🆓 Free Space    : LIVE                  │
-│ 🟢 Service       : ONLINE                │
+│ Platform : Cloud Compute │
+│ CPU : LIVE │
+│ RAM : LIVE │
+│ Storage : LIVE │
+│ 🆓 Free Space : LIVE │
+│ Service : ONLINE │
 ╰──────────────────────────────────────────╯
 ```
 
@@ -178,30 +178,30 @@ Project dashboards expose:
 
 ------------------------------------------------------------------------
 
-## 🎨 Telegram UI
+## Telegram UI
 
-  Action                                 Button Style
-  -------------------------------------- --------------
-  🚀 Deploy / Start / Install / Create   🟢 Success
-  🧭 Navigation / Management / Info      🔵 Primary
-  🗑 Delete / Stop / Remove / Clear       🔴 Danger
+  Action Button Style                       
+  ----------------------------------------- ----
+  Deploy / Start / Install / Create Succe   ss
+  Navigation / Management / Info Primary    
+  Delete / Stop / Remove / Clear Danger     
 
 The UI uses consistent action-based styling rather than random button
 colors.
 
 ------------------------------------------------------------------------
 
-## 📁 Online File Manager
+## Online File Manager
 
 ``` text
-📁 PROJECT FILES
+ PROJECT FILES
 
-📄 main.py
-   ✏️ Edit    🔁 Replace    📥 Download
-   ✏️ Rename  🗑 Remove
+ main.py
+ Edit Replace Download
+ Rename Remove
 
-➕ New File
-➕ New Folder
+ New File
+ New Folder
 ```
 
 Manage your project directly from Telegram without manually opening the
@@ -209,7 +209,7 @@ server filesystem.
 
 ------------------------------------------------------------------------
 
-## 📝 Environment Variables
+## Environment Variables
 
 Configure project variables with:
 
@@ -226,7 +226,7 @@ The `.env` panel supports:
 
 ------------------------------------------------------------------------
 
-## 🔌 PORT Support
+## PORT Support
 
 Web/server projects receive an automatically allocated free port:
 
@@ -238,7 +238,7 @@ Your application can read the `PORT` environment variable normally.
 
 ------------------------------------------------------------------------
 
-## ⏳ Expiry & Queue
+## Expiry & Queue
 
 JXE Hosting Bot supports:
 
@@ -251,45 +251,45 @@ JXE Hosting Bot supports:
 
 ``` text
 PROJECT START REQUEST
-          │
-          ▼
-   ┌───────────────┐
-   │ SLOT AVAILABLE│
-   └───────┬───────┘
-       YES │     │ NO
-           │     │
-           ▼     ▼
-        🟢 RUN  🟡 QUEUE
-                 │
-                 ▼
-          ⏱️ WAIT FOR SLOT
-                 │
-                 ▼
-              🟢 START
+ │
+ ▼
+ ┌───────────────┐
+ │ SLOT AVAILABLE│
+ └───────┬───────┘
+ YES │ │ NO
+ │ │
+ ▼ ▼
+ RUN QUEUE
+ │
+ ▼
+ WAIT FOR SLOT
+ │
+ ▼
+ START
 ```
 
 ------------------------------------------------------------------------
 
-## 👑 Admin Command Center
+## Admin Command Center
 
 The administrator can manage:
 
--   👥 Users
--   📦 Project limits
--   📢 Force Join
--   🛠 Maintenance mode
--   🚀 Deployment availability
--   ♻️ Auto-restart defaults
--   ⏳ Queue settings
--   📡 Report group
--   📥 JSON backup
--   🚫 User suspension
+-   Users
+-   Project limits
+-   Force Join
+-   Maintenance mode
+-   Deployment availability
+-   Auto-restart defaults
+-   Queue settings
+-   Report group
+-   JSON backup
+-   User suspension
 
 Admin callbacks are protected by an admin-only permission check.
 
 ------------------------------------------------------------------------
 
-## 📡 Report Group
+## Report Group
 
 When enabled, project events can be reported to a configured Telegram
 group.
@@ -306,23 +306,23 @@ Reports can include:
 
 ------------------------------------------------------------------------
 
-## 🛡️ Security Model
+## Security Model
 
 ``` text
 ZIP UPLOAD
-    │
-    ├── ❌ Absolute paths
-    ├── ❌ ../ traversal
-    ├── ❌ Symlink entries
-    ├── ❌ Outside-project paths
-    │
-    ▼
+ │
+ ├── Absolute paths
+ ├── ../ traversal
+ ├── Symlink entries
+ ├── Outside-project paths
+ │
+ ▼
 SAFE PROJECT DIRECTORY
-    │
-    ├── 🔒 Project HOME
-    ├── 🔒 Project USERPROFILE
-    ├── 🔒 Project TEMP
-    └── 🔒 Reduced inherited environment
+ │
+ ├── Project HOME
+ ├── Project USERPROFILE
+ ├── Project TEMP
+ └── Reduced inherited environment
 ```
 
 > This is a project-level protection layer. For untrusted multi-user
@@ -330,7 +330,7 @@ SAFE PROJECT DIRECTORY
 
 ------------------------------------------------------------------------
 
-## 🧩 Configuration
+## Configuration
 
 The bot expects `config.json` beside `main.py`.
 
@@ -338,18 +338,18 @@ Example:
 
 ``` json
 {
-  "bot_token": "YOUR_BOT_TOKEN",
-  "owner_id": 123456789,
-  "base_dir": "projects",
-  "meta_file": "projects_meta.json",
-  "default_online_days": 2,
-  "default_project_limit": 1,
-  "max_concurrent_projects": 8,
-  "queue_enabled": true,
-  "auto_restart_default": true,
-  "deploy_enabled": true,
-  "dynamic_animation_enabled": true,
-  "show_live_status": true
+ "bot_token": "YOUR_BOT_TOKEN",
+ "owner_id": 123456789,
+ "base_dir": "projects",
+ "meta_file": "projects_meta.json",
+ "default_online_days": 2,
+ "default_project_limit": 1,
+ "max_concurrent_projects": 8,
+ "queue_enabled": true,
+ "auto_restart_default": true,
+ "deploy_enabled": true,
+ "dynamic_animation_enabled": true,
+ "show_live_status": true
 }
 ```
 
@@ -357,7 +357,7 @@ Example:
 
 ------------------------------------------------------------------------
 
-## 📂 Project Structure
+## Project Structure
 
 ``` text
 JXE-HOSTING-BOT/
@@ -367,17 +367,17 @@ JXE-HOSTING-BOT/
 ├── projects_meta.json
 │
 └── projects/
-    ├── proj_<chat_id>_<timestamp>/
-    │   ├── main.py
-    │   ├── .env
-    │   └── ...
-    │
-    └── ...
+ ├── proj_<chat_id>_<timestamp>/
+ │ ├── main.py
+ │ ├── .env
+ │ └── ...
+ │
+ └── ...
 ```
 
 ------------------------------------------------------------------------
 
-## ▶️ Quick Start
+## ▶ Quick Start
 
 ### 1. Clone
 
@@ -396,10 +396,10 @@ pip install pyTelegramBotAPI requests urllib3 psutil
 
 ``` json
 {
-  "bot_token": "YOUR_BOT_TOKEN",
-  "owner_id": 123456789,
-  "base_dir": "projects",
-  "meta_file": "projects_meta.json"
+ "bot_token": "YOUR_BOT_TOKEN",
+ "owner_id": 123456789,
+ "base_dir": "projects",
+ "meta_file": "projects_meta.json"
 }
 ```
 
@@ -414,66 +414,66 @@ polling, and automatically reconnects after polling errors.
 
 ------------------------------------------------------------------------
 
-## 🧠 Architecture
+## Architecture
 
 ``` text
-                    TELEGRAM
-                       │
-                       ▼
-              ┌─────────────────┐
-              │  BOT INTERFACE  │
-              ├─────────────────┤
-              │ Navigation      │
-              │ Callbacks       │
-              │ Force Join      │
-              │ User Dashboard  │
-              │ Admin Panel     │
-              └────────┬────────┘
-                       │
-                       ▼
-              ┌─────────────────┐
-              │ PROJECT CONTROL │
-              ├─────────────────┤
-              │ Deploy          │
-              │ Start / Stop    │
-              │ Restart         │
-              │ Queue / Expiry  │
-              │ Files / ENV     │
-              │ Backup          │
-              └────────┬────────┘
-                       │
-                       ▼
-              ┌─────────────────┐
-              │ RUNTIME MONITOR │
-              ├─────────────────┤
-              │ Process Tracking│
-              │ CPU / RAM       │
-              │ Crash Detection │
-              │ Auto-Restart    │
-              └────────┬────────┘
-                       │
-                       ▼
-                 USER PROJECT
+ TELEGRAM
+ │
+ ▼
+ ┌─────────────────┐
+ │ BOT INTERFACE │
+ ├─────────────────┤
+ │ Navigation │
+ │ Callbacks │
+ │ Force Join │
+ │ User Dashboard │
+ │ Admin Panel │
+ └────────┬────────┘
+ │
+ ▼
+ ┌─────────────────┐
+ │ PROJECT CONTROL │
+ ├─────────────────┤
+ │ Deploy │
+ │ Start / Stop │
+ │ Restart │
+ │ Queue / Expiry │
+ │ Files / ENV │
+ │ Backup │
+ └────────┬────────┘
+ │
+ ▼
+ ┌─────────────────┐
+ │ RUNTIME MONITOR │
+ ├─────────────────┤
+ │ Process Tracking│
+ │ CPU / RAM │
+ │ Crash Detection │
+ │ Auto-Restart │
+ └────────┬────────┘
+ │
+ ▼
+ USER PROJECT
 ```
 
 ------------------------------------------------------------------------
 
-## 💎 Why JXE?
+## Why JXE?
 
--   ⚡ Telegram-first deployment
--   🚀 Fast project startup
--   📁 Built-in file manager
--   🖥️ Runtime monitoring
--   ♻️ Automatic crash recovery
--   🛡️ ZIP/path safety checks
--   ⏳ Expiry + queue management
--   👑 Powerful admin controls
--   📡 Optional report-group integration
--   ✨ Animated deployment experience
+-   Telegram-first deployment
+-   Fast project startup
+-   Built-in file manager
+-   Runtime monitoring
+-   Automatic crash recovery
+-   ZIP/path safety checks
+-   Expiry + queue management
+-   Powerful admin controls
+-   Optional report-group integration
+-   Animated deployment experience
 
 ------------------------------------------------------------------------
 
-## 🔥 Final Showcase
+## Final Showcase
 
 ![JXE Animated
 Banner](https://capsule-render.vercel.app/api?type=venom&height=180&text=JXE%20HOSTING%20BOT&fontSize=42&fontColor=ffffff&stroke=ffffff&strokeWidth=1&color=0:111827,50:4f46e5,100:9333ea&animation=twinkling)
@@ -483,7 +483,7 @@ Animation](https://readme-typing-svg.demolab.com?font=JetBrains+Mono&weight=800&
 
 ------------------------------------------------------------------------
 
-## 📜 License
+## License
 
 Add your preferred license before publishing the repository.
 
@@ -491,6 +491,6 @@ Add your preferred license before publishing the repository.
 
 ![Footer](https://capsule-render.vercel.app/api?type=waving&height=140&section=footer&text=Built%20for%20Fast%20Telegram%20Hosting&fontSize=22&fontColor=ffffff&color=0:7c3aed,50:2563eb,100:0f172a&animation=twinkling)
 
-**⭐ If you like JXE Hosting Bot, give the repository a star!**
+\*\* If you like JXE Hosting Bot, give the repository a star!\*\*
 
 **JXE HOSTING BOT --- Deploy. Control. Monitor.**
