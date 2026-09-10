@@ -1,8 +1,8 @@
-# 🚀 JXE HOSTING HUB
+# 🚀 JXE HOSTING BOT
 
-
+::: {align="center"}
 ![JXE Hosting
-BOT](https://capsule-render.vercel.app/api?type=waving&height=220&text=JXE%20HOSTING%20BOT&fontAlign=50&fontAlignY=38&desc=Telegram%20Powered%20Project%20Hosting%20Control%20Center&descAlignY=60&animation=twinkling&fontColor=ffffff&color=0:0f172a,50:2563eb,100:7c3aed)
+Hub](https://capsule-render.vercel.app/api?type=waving&height=220&text=JXE%20HOSTING%20BOT&fontAlign=50&fontAlignY=38&desc=Telegram%20Powered%20Project%20Hosting%20Control%20Center&descAlignY=60&animation=twinkling&fontColor=ffffff&color=0:0f172a,50:2563eb,100:7c3aed)
 
 ![Typing
 Animation](https://readme-typing-svg.demolab.com?font=Fira+Code&weight=700&size=24&pause=900&color=58A6FF&center=true&vCenter=true&width=800&lines=Deploy+Projects+from+Telegram+%E2%9A%A1;Manage+Files+%7C+Logs+%7C+ENV+%7C+Backups;Live+CPU+%2B+RAM+%2B+Uptime+Monitoring;Auto-Restart+%2B+Crash+Protection;Admin+Controls+%2B+Force+Join+%2B+Reports)
@@ -18,9 +18,17 @@ editing and controlling projects --- directly from Telegram.**
 
 ------------------------------------------------------------------------
 
-## ✨ What Is JXE Hosting Hub?
+## 📢 Official Telegram Channel
 
-**JXE Hosting Hub** turns a Telegram bot into a lightweight
+[![Telegram
+Channel](https://img.shields.io/badge/Telegram-@Jahid__x__Empire-26A5E4?style=for-the-badge&logo=telegram&logoColor=white)](https://t.me/Jahid_x_Empire)
+
+**Updates, announcements & support:**
+[@Jahid_x_Empire](https://t.me/Jahid_x_Empire)
+
+## ✨ What Is JXE Hosting Bot?
+
+**JXE Hosting Bot** turns a Telegram bot into a lightweight
 project-management and hosting control center.
 
 Upload a project as a `.zip`, select its entry file, launch it, inspect
@@ -232,7 +240,7 @@ Your application can read the `PORT` environment variable normally.
 
 ## ⏳ Expiry & Queue
 
-JXE Hosting Hub supports:
+JXE Hosting Bot supports:
 
 -   Online-time limits
 -   Expiry tracking
@@ -352,7 +360,7 @@ Example:
 ## 📂 Project Structure
 
 ``` text
-JXE-HOSTING-HUB/
+JXE-HOSTING-BOT/
 │
 ├── main.py
 ├── config.json
@@ -468,7 +476,7 @@ polling, and automatically reconnects after polling errors.
 ## 🔥 Final Showcase
 
 ![JXE Animated
-Banner](https://capsule-render.vercel.app/api?type=venom&height=180&text=JXE%20HOSTING%20HUB&fontSize=42&fontColor=ffffff&stroke=ffffff&strokeWidth=1&color=0:111827,50:4f46e5,100:9333ea&animation=twinkling)
+Banner](https://capsule-render.vercel.app/api?type=venom&height=180&text=JXE%20HOSTING%20BOT&fontSize=42&fontColor=ffffff&stroke=ffffff&strokeWidth=1&color=0:111827,50:4f46e5,100:9333ea&animation=twinkling)
 
 ![Final
 Animation](https://readme-typing-svg.demolab.com?font=JetBrains+Mono&weight=800&size=20&pause=600&color=A78BFA&center=true&vCenter=true&width=900&lines=%3C+TELEGRAM+%2B+HOSTING+%2B+CONTROL+%2F%3E;%3C+UPLOAD+%2B+RUN+%2B+MONITOR+%2F%3E;%3C+FILES+%2B+LOGS+%2B+ENV+%2B+BACKUPS+%2F%3E;%3C+AUTO-RESTART+%2B+CRASH-PROTECTION+%2F%3E)
@@ -483,6 +491,6 @@ Add your preferred license before publishing the repository.
 
 ![Footer](https://capsule-render.vercel.app/api?type=waving&height=140&section=footer&text=Built%20for%20Fast%20Telegram%20Hosting&fontSize=22&fontColor=ffffff&color=0:7c3aed,50:2563eb,100:0f172a&animation=twinkling)
 
-**⭐ If you like JXE Hosting BOT, give the repository a star!**
+**⭐ If you like JXE Hosting Bot, give the repository a star!**
 
 **JXE HOSTING BOT --- Deploy. Control. Monitor.**
