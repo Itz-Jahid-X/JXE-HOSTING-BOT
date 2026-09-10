@@ -2,7 +2,7 @@
 
 
 ![JXE Hosting
-BOT](https://capsule-render.vercel.app/api?type=waving&height=220&text=JXE%20HOSTING%20HUB&fontAlign=50&fontAlignY=38&desc=Telegram%20Powered%20Project%20Hosting%20Control%20Center&descAlignY=60&animation=twinkling&fontColor=ffffff&color=0:0f172a,50:2563eb,100:7c3aed)
+BOT](https://capsule-render.vercel.app/api?type=waving&height=220&text=JXE%20HOSTING%20BOT&fontAlign=50&fontAlignY=38&desc=Telegram%20Powered%20Project%20Hosting%20Control%20Center&descAlignY=60&animation=twinkling&fontColor=ffffff&color=0:0f172a,50:2563eb,100:7c3aed)
 
 ![Typing
 Animation](https://readme-typing-svg.demolab.com?font=Fira+Code&weight=700&size=24&pause=900&color=58A6FF&center=true&vCenter=true&width=800&lines=Deploy+Projects+from+Telegram+%E2%9A%A1;Manage+Files+%7C+Logs+%7C+ENV+%7C+Backups;Live+CPU+%2B+RAM+%2B+Uptime+Monitoring;Auto-Restart+%2B+Crash+Protection;Admin+Controls+%2B+Force+Join+%2B+Reports)
