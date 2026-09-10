@@ -1,6 +1,6 @@
 # 🚀 JXE HOSTING BOT
 
-::: {align="center"}
+
 ![JXE Hosting
 Hub](https://capsule-render.vercel.app/api?type=waving&height=220&text=JXE%20HOSTING%20BOT&fontAlign=50&fontAlignY=38&desc=Telegram%20Powered%20Project%20Hosting%20Control%20Center&descAlignY=60&animation=twinkling&fontColor=ffffff&color=0:0f172a,50:2563eb,100:7c3aed)
 
